@@ -198,7 +198,7 @@ def admin_panel():
                 flash(f'Elección {status} exitosamente.', 'success')
     
     elections = Election.query.order_by(Election.created_at.desc()).all()
-    return render_template('admin_panel.html', elections=elections)
+    return render_template('admin_panel.html', elections=elections, voting_blockchain=voting_blockchain)
 
 @app.route('/admin/logout')
 def admin_logout():
