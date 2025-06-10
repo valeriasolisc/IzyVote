@@ -12,8 +12,8 @@ class EmailService:
     def __init__(self):
         self.smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-        self.email_username = os.environ.get("EMAIL_USERNAME", "noreply@example.com")
-        self.email_password = os.environ.get("EMAIL_PASSWORD", "default_password")
+        self.email_username = os.environ.get("EMAIL_USERNAME", "sistemadevotacionblockchain@gmail.com")
+        self.email_password = os.environ.get("EMAIL_PASSWORD")
     
     def generate_verification_code(self) -> str:
         """Generate a 6-digit verification code"""
@@ -44,9 +44,19 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            # For development, just log the email content
-            logging.info(f"Verification email sent to {to_email}: Code {verification_code}")
-            print(f"VERIFICATION EMAIL - To: {to_email}, Code: {verification_code}")
+            # Send real email if credentials are provided
+            if self.email_password:
+                server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+                server.starttls()
+                server.login(self.email_username, self.email_password)
+                text = msg.as_string()
+                server.sendmail(self.email_username, to_email, text)
+                server.quit()
+                logging.info(f"Verification email sent to {to_email}")
+            else:
+                # For development, just log the email content
+                logging.info(f"Development mode - Verification email to {to_email}: Code {verification_code}")
+                print(f"VERIFICATION EMAIL - To: {to_email}, Code: {verification_code}")
             
             return True
             
@@ -84,9 +94,19 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            # For development, just log the email content
-            logging.info(f"Vote confirmation sent to {to_email}")
-            print(f"VOTE CONFIRMATION EMAIL - To: {to_email}")
+            # Send real email if credentials are provided
+            if self.email_password:
+                server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+                server.starttls()
+                server.login(self.email_username, self.email_password)
+                text = msg.as_string()
+                server.sendmail(self.email_username, to_email, text)
+                server.quit()
+                logging.info(f"Vote confirmation sent to {to_email}")
+            else:
+                # For development, just log the email content
+                logging.info(f"Development mode - Vote confirmation to {to_email}")
+                print(f"VOTE CONFIRMATION EMAIL - To: {to_email}")
             
             return True
             
