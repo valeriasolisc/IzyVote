@@ -1,3 +1,4 @@
+# Modifying the vote route to improve functionality, add checks and validation
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app import app, db
 from models import Election, VerificationCode, VoterHistory
@@ -6,6 +7,7 @@ from email_service import email_service
 import hashlib
 from datetime import datetime, timedelta
 import json
+import logging
 
 @app.route('/')
 def index():
@@ -17,29 +19,29 @@ def index():
 def verify_email(election_id):
     """Email verification page"""
     election = Election.query.get_or_404(election_id)
-    
+
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        
+
         # Validate UNI domain
         if not email.endswith('@uni.pe'):
             flash('Solo se permiten correos del dominio @uni.pe', 'error')
             return render_template('verify_email.html', election=election)
-        
+
         # Check if user already voted
         email_hash = hashlib.sha256(email.encode()).hexdigest()
         existing_vote = VoterHistory.query.filter_by(
             email_hash=email_hash, 
             election_id=election_id
         ).first()
-        
+
         if existing_vote:
             flash('Ya has votado en esta elección.', 'error')
             return redirect(url_for('index'))
-        
+
         # Generate and send verification code
         verification_code = email_service.generate_verification_code()
-        
+
         # Store verification code
         verification = VerificationCode(
             email=email,
@@ -48,7 +50,7 @@ def verify_email(election_id):
         )
         db.session.add(verification)
         db.session.commit()
-        
+
         # Send email
         if email_service.send_verification_email(email, verification_code, election.title):
             session['verification_id'] = verification.id
@@ -56,84 +58,118 @@ def verify_email(election_id):
             return redirect(url_for('vote', election_id=election_id))
         else:
             flash('Error enviando el código. Intenta de nuevo.', 'error')
-    
+
     return render_template('verify_email.html', election=election)
 
 @app.route('/vote/<int:election_id>', methods=['GET', 'POST'])
 def vote(election_id):
     """Voting page"""
+    if 'verification_id' not in session:
+        flash('Debes verificar tu email primero.', 'error')
+        return redirect(url_for('verify_email', election_id=election_id))
+
+    verification = VerificationCode.query.get_or_404(session['verification_id'])
     election = Election.query.get_or_404(election_id)
-    
+
+    # Check if election is active
     if not election.is_active:
         flash('Esta elección no está activa.', 'error')
         return redirect(url_for('index'))
-    
-    verification_id = session.get('verification_id')
-    if not verification_id:
+
+    # Verify this verification belongs to this election
+    if verification.election_id != election_id:
+        flash('Código de verificación inválido para esta elección.', 'error')
         return redirect(url_for('verify_email', election_id=election_id))
-    
-    verification = VerificationCode.query.get(verification_id)
-    if not verification or verification.used or verification.election_id != election_id:
-        flash('Código de verificación inválido.', 'error')
+
+    # Check if verification code has expired
+    if verification.is_expired():
+        flash('Tu código de verificación ha expirado. Solicita uno nuevo.', 'error')
+        session.pop('verification_id', None)
         return redirect(url_for('verify_email', election_id=election_id))
-    
-    # Check if code is expired (30 minutes)
-    if datetime.utcnow() - verification.created_at > timedelta(minutes=30):
-        flash('Código de verificación expirado.', 'error')
-        return redirect(url_for('verify_email', election_id=election_id))
-    
+
+    if verification.is_used:
+        flash('Este código ya fue utilizado.', 'error')
+        session.pop('verification_id', None)
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         code = request.form.get('code', '').strip()
-        selected_option = request.form.get('option', '').strip()
-        
+        choice = request.form.get('choice', '').strip()
+
+        # Verify code
         if code != verification.code:
             flash('Código de verificación incorrecto.', 'error')
-            return render_template('vote.html', election=election, options=election.get_options())
-        
-        if not selected_option or selected_option not in election.get_options():
+            return render_template('vote.html', election=election, verification=verification)
+
+        if not choice:
+            flash('Debes seleccionar una opción.', 'error')
+            return render_template('vote.html', election=election, verification=verification)
+
+        # Validate choice is in election options
+        election_options = [opt.strip() for opt in election.options.split(',')]
+        if choice not in election_options:
             flash('Opción de voto inválida.', 'error')
-            return render_template('vote.html', election=election, options=election.get_options())
-        
-        # Mark verification as used
-        verification.used = True
-        
-        # Create voter history (anonymous)
-        email_hash = hashlib.sha256(verification.email.encode()).hexdigest()
-        voter_history = VoterHistory(
-            email_hash=email_hash,
-            election_id=election_id
-        )
-        
-        # Add vote to blockchain
-        voting_blockchain.add_vote(election_id, selected_option)
-        voting_blockchain.mine_pending_votes()
-        
-        db.session.add(voter_history)
-        db.session.commit()
-        
-        # Send confirmation email
-        email_service.send_vote_confirmation(verification.email, election.title)
-        
-        # Clear session
-        session.pop('verification_id', None)
-        
-        flash('¡Voto registrado exitosamente!', 'success')
-        return redirect(url_for('results', election_id=election_id))
-    
-    return render_template('vote.html', election=election, options=election.get_options())
+            return render_template('vote.html', election=election, verification=verification)
+
+        try:
+            # Process vote
+            vote_data = {
+                'election_id': election_id,
+                'election_title': election.title,
+                'choice': choice,
+                'timestamp': datetime.utcnow().isoformat(),
+                'voter_hash': hashlib.sha256(f"{verification.email}_{election_id}_{datetime.utcnow()}".encode()).hexdigest()[:16]
+            }
+
+            # Add to blockchain
+            success = voting_blockchain.add_vote(vote_data)
+
+            if not success:
+                flash('Error al registrar el voto en la blockchain. Intenta de nuevo.', 'error')
+                return render_template('vote.html', election=election, verification=verification)
+
+            # Mark verification as used
+            verification.is_used = True
+            verification.used_at = datetime.utcnow()
+
+            # Record voter history (anonymous)
+            email_hash = hashlib.sha256(verification.email.encode()).hexdigest()
+            voter_history = VoterHistory(
+                email_hash=email_hash,
+                election_id=election_id,
+                voted_at=datetime.utcnow()
+            )
+            db.session.add(voter_history)
+            db.session.commit()
+
+            # Send confirmation email
+            email_service.send_vote_confirmation(verification.email, election.title)
+
+            # Clear session
+            session.pop('verification_id', None)
+
+            flash('¡Tu voto ha sido registrado exitosamente en la blockchain!', 'success')
+            return redirect(url_for('results', election_id=election_id))
+
+        except Exception as e:
+            logging.error(f"Error processing vote: {str(e)}")
+            flash('Error interno al procesar tu voto. Contacta al administrador.', 'error')
+            return render_template('vote.html', election=election, verification=verification)
+
+    return render_template('vote.html', election=election, verification=verification)
 
 @app.route('/results/<int:election_id>')
 def results(election_id):
     """Results page with charts"""
     election = Election.query.get_or_404(election_id)
     vote_count = voting_blockchain.get_vote_count(election_id)
-    
+
     # Ensure all options are represented
     options = election.get_options()
     for option in options:
         if option not in vote_count:
             vote_count[option] = 0
-    
+
     return render_template('results.html', election=election, vote_count=vote_count)
 
 @app.route('/blockchain')
@@ -148,14 +184,14 @@ def admin_login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
-        
+
         if email == 'valeria.solis.c@uni.pe' and password == 'PruebaDeSoftware':
             session['admin_logged_in'] = True
             flash('Bienvenido al panel administrativo.', 'success')
             return redirect(url_for('admin_panel'))
         else:
             flash('Credenciales incorrectas.', 'error')
-    
+
     return render_template('admin_login.html')
 
 @app.route('/admin/panel', methods=['GET', 'POST'])
@@ -163,15 +199,15 @@ def admin_panel():
     """Admin panel for managing elections"""
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    
+
     if request.method == 'POST':
         action = request.form.get('action')
-        
+
         if action == 'create_election':
             title = request.form.get('title', '').strip()
             description = request.form.get('description', '').strip()
             options_text = request.form.get('options', '').strip()
-            
+
             if not title or not options_text:
                 flash('Título y opciones son requeridos.', 'error')
             else:
@@ -187,7 +223,7 @@ def admin_panel():
                     db.session.add(election)
                     db.session.commit()
                     flash('Elección creada exitosamente.', 'success')
-        
+
         elif action == 'toggle_election':
             election_id = request.form.get('election_id')
             election = Election.query.get(election_id)
@@ -196,7 +232,7 @@ def admin_panel():
                 db.session.commit()
                 status = 'activada' if election.is_active else 'desactivada'
                 flash(f'Elección {status} exitosamente.', 'success')
-    
+
     elections = Election.query.order_by(Election.created_at.desc()).all()
     return render_template('admin_panel.html', elections=elections, voting_blockchain=voting_blockchain)
 
@@ -212,11 +248,12 @@ def api_results(election_id):
     """API endpoint for real-time results"""
     vote_count = voting_blockchain.get_vote_count(election_id)
     election = Election.query.get_or_404(election_id)
-    
+
     # Ensure all options are represented
     options = election.get_options()
     for option in options:
         if option not in vote_count:
             vote_count[option] = 0
-    
+
     return jsonify(vote_count)
+`
