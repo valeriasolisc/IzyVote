@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Sistema de Votación Blockchain{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-vote-yea text-primary me-3"></i>
+                Sistema de Votación Blockchain
+            </h1>
+            <p class="lead text-muted">
+                Participa en elecciones seguras, transparentes y completamente anónimas
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 bg-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Seguro</h5>
+                <p class="card-text">Cada voto está protegido por tecnología blockchain y encriptación avanzada.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 bg-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-eye-slash fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Anónimo</h5>
+                <p class="card-text">Tu identidad está completamente desvinculada de tu voto para garantizar privacidad.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 bg-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-link fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Transparente</h5>
+                <p class="card-text">Todos los votos se almacenan en una blockchain pública y verificable.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Elections -->
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-ballot-check me-2"></i>
+            Elecciones Activas
+        </h2>
+        
+        {% if elections %}
+            <div class="row">
+                {% for election in elections %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-poll me-2"></i>
+                                    {{ election.title }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if election.description %}
+                                    <p class="card-text">{{ election.description }}</p>
+                                {% endif %}
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Creada: {{ election.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('verify_email', election_id=election.id) }}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-vote-yea me-2"></i>
+                                        Votar Ahora
+                                    </a>
+                                    <a href="{{ url_for('results', election_id=election.id) }}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Ver Resultados
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay elecciones activas</h4>
+                <p class="text-muted">Las elecciones aparecerán aquí cuando estén disponibles.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- How it Works -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-question-circle me-2"></i>
+            ¿Cómo Funciona?
+        </h2>
+        <div class="row">
+            <div class="col-md-3 text-center mb-4">
+                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">1</span>
+                </div>
+                <h5>Verificación</h5>
+                <p class="text-muted">Ingresa tu correo @uni.pe y recibe un código de verificación.</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">2</span>
+                </div>
+                <h5>Votación</h5>
+                <p class="text-muted">Ingresa el código y selecciona tu opción de voto.</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">3</span>
+                </div>
+                <h5>Blockchain</h5>
+                <p class="text-muted">Tu voto se registra de forma anónima en la blockchain.</p>
+            </div>
+            <div class="col-md-3 text-center mb-4">
+                <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <span class="text-white fw-bold fs-4">4</span>
+                </div>
+                <h5>Confirmación</h5>
+                <p class="text-muted">Recibe confirmación por correo y ve los resultados.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

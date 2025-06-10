@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Administrativo - Sistema de Votación Blockchain{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-cog text-warning me-2"></i>
+                Panel Administrativo
+            </h2>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Create New Election -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Crear Nueva Elección
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="create_election">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="fas fa-heading me-1"></i>
+                                    Título de la Elección
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="title" 
+                                       name="title" 
+                                       placeholder="Ej: Elección de Representante Estudiantil"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>
+                                    Descripción (Opcional)
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="description" 
+                                       name="description" 
+                                       placeholder="Breve descripción de la elección">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="options" class="form-label">
+                            <i class="fas fa-list-ul me-1"></i>
+                            Opciones de Votación
+                        </label>
+                        <textarea class="form-control" 
+                                  id="options" 
+                                  name="options" 
+                                  rows="4"
+                                  placeholder="Ingresa cada opción en una línea separada:&#10;&#10;Candidato A&#10;Candidato B&#10;Voto en Blanco"
+                                  required></textarea>
+                        <div class="form-text">
+                            Escribe cada opción en una línea separada. Mínimo 2 opciones.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>
+                            Crear Elección
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Elections -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Elecciones Existentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if elections %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-poll me-1"></i>
+                                        Título
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Creada
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-toggle-on me-1"></i>
+                                        Estado
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-chart-bar me-1"></i>
+                                        Votos
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-cogs me-1"></i>
+                                        Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for election in elections %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ election.title }}</strong>
+                                            {% if election.description %}
+                                                <br><small class="text-muted">{{ election.description }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ election.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td>
+                                            {% if election.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Activa
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>
+                                                    Inactiva
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% set vote_count = voting_blockchain.get_vote_count(election.id) %}
+                                            {% set total_votes = vote_count.values() | sum %}
+                                            <span class="badge bg-primary">{{ total_votes }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <form method="POST" class="d-inline">
+                                                    <input type="hidden" name="action" value="toggle_election">
+                                                    <input type="hidden" name="election_id" value="{{ election.id }}">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm {{ 'btn-outline-danger' if election.is_active else 'btn-outline-success' }}">
+                                                        <i class="fas fa-{{ 'pause' if election.is_active else 'play' }} me-1"></i>
+                                                        {{ 'Desactivar' if election.is_active else 'Activar' }}
+                                                    </button>
+                                                </form>
+                                                <a href="{{ url_for('results', election_id=election.id) }}" 
+                                                   class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-chart-bar me-1"></i>
+                                                    Resultados
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay elecciones creadas</h5>
+                        <p class="text-muted">Crea tu primera elección usando el formulario de arriba.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-0 bg-dark">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-link text-info me-2"></i>
+                    Estado de la Blockchain
+                </h6>
+                <p class="card-text">
+                    <span class="badge bg-success">{{ voting_blockchain.chain | length }} Bloques</span>
+                    <span class="badge bg-primary">{{ voting_blockchain.pending_votes | length }} Votos Pendientes</span>
+                </p>
+                <a href="{{ url_for('blockchain_view') }}" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-eye me-1"></i>
+                    Ver Blockchain
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 bg-dark">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-shield-alt text-success me-2"></i>
+                    Seguridad del Sistema
+                </h6>
+                <p class="card-text">
+                    <span class="badge bg-{{ 'success' if voting_blockchain.is_chain_valid() else 'danger' }}">
+                        {{ 'Blockchain Válida' if voting_blockchain.is_chain_valid() else 'Blockchain Corrupta' }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Import blockchain instance for template
+const voting_blockchain = {{ voting_blockchain.to_dict() | tojson }};
+</script>
+{% endblock %}

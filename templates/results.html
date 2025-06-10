@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados - {{ election.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Resultados: {{ election.title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if election.description %}
+                    <p class="text-muted">{{ election.description }}</p>
+                    <hr>
+                {% endif %}
+                
+                <!-- Results Chart -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <canvas id="resultsChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-lg-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-list-ol me-2"></i>
+                            Resumen de Votos
+                        </h5>
+                        
+                        {% set total_votes = vote_count.values() | sum %}
+                        
+                        <div class="mb-3">
+                            <h6 class="text-primary">
+                                <i class="fas fa-users me-1"></i>
+                                Total de Votos: {{ total_votes }}
+                            </h6>
+                        </div>
+                        
+                        {% for option, count in vote_count.items() %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold">{{ option }}</span>
+                                    <span class="badge bg-primary">{{ count }} votos</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    {% set percentage = (count / total_votes * 100) if total_votes > 0 else 0 %}
+                                    <div class="progress-bar" 
+                                         role="progressbar" 
+                                         style="width: {{ percentage }}%"
+                                         aria-valuenow="{{ percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    {{ "%.1f"|format(percentage) }}%
+                                </small>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if total_votes == 0 %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Aún no hay votos registrados</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>
+                                Volver al Inicio
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('blockchain_view') }}" class="btn btn-outline-info">
+                                <i class="fas fa-link me-2"></i>
+                                Ver Blockchain
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Real-time Update Info -->
+        <div class="card mt-4 border-0 bg-dark">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-1">
+                            <i class="fas fa-sync-alt text-success me-2"></i>
+                            Resultados en Tiempo Real
+                        </h6>
+                        <p class="text-muted small mb-0">
+                            Los resultados se actualizan automáticamente cada vez que se registra un nuevo voto en la blockchain.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-outline-success btn-sm" onclick="refreshResults()">
+                            <i class="fas fa-refresh me-1"></i>
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Prepare chart data
+const chartData = {
+    labels: {{ vote_count.keys() | list | tojson }},
+    datasets: [{
+        label: 'Votos',
+        data: {{ vote_count.values() | list | tojson }},
+        backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)'
+        ],
+        borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 205, 86, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 2
+    }]
+};
+
+// Create chart
+const ctx = document.getElementById('resultsChart').getContext('2d');
+const resultsChart = new Chart(ctx, {
+    type: 'bar',
+    data: chartData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Distribución de Votos',
+                color: '#fff'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    color: '#fff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#fff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    }
+});
+
+// Refresh results function
+function refreshResults() {
+    location.reload();
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshResults, 30000);
+</script>
+{% endblock %}

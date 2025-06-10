@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Verificar Email - {{ election.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-envelope-open-text me-2"></i>
+                    Verificación de Email
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5 class="text-primary">{{ election.title }}</h5>
+                    {% if election.description %}
+                        <p class="text-muted">{{ election.description }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Requisitos:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Solo correos con dominio <strong>@uni.pe</strong></li>
+                        <li>Una sola votación por persona por elección</li>
+                        <li>Verificación mediante código enviado por email</li>
+                    </ul>
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>
+                            Correo Electrónico
+                        </label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="email" 
+                               name="email" 
+                               placeholder="tu.nombre@uni.pe"
+                               required>
+                        <div class="form-text">
+                            Debe ser un correo válido del dominio @uni.pe
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Enviar Código de Verificación
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver al Inicio
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Information Card -->
+        <div class="card mt-4 border-0 bg-dark">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-shield-alt text-success me-2"></i>
+                    Tu Privacidad Está Protegida
+                </h6>
+                <p class="card-text small text-muted">
+                    Una vez que votes, tu correo electrónico será completamente desvinculado de tu voto. 
+                    Solo se almacena un hash anónimo para prevenir votos duplicados.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

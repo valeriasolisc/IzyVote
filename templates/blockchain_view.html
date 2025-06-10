@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain - Sistema de Votación{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-link me-2"></i>
+                    Visualización de la Blockchain
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Blockchain Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-dark text-center">
+                            <div class="card-body">
+                                <i class="fas fa-cubes fa-2x text-primary mb-2"></i>
+                                <h5 class="card-title">{{ blockchain.chain | length }}</h5>
+                                <p class="card-text small">Total de Bloques</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-dark text-center">
+                            <div class="card-body">
+                                <i class="fas fa-vote-yea fa-2x text-success mb-2"></i>
+                                <h5 class="card-title">
+                                    {% set total_votes = 0 %}
+                                    {% for block in blockchain.chain %}
+                                        {% set total_votes = total_votes + (block.votes | length) %}
+                                    {% endfor %}
+                                    {{ total_votes }}
+                                </h5>
+                                <p class="card-text small">Votos Registrados</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-dark text-center">
+                            <div class="card-body">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <h5 class="card-title">{{ blockchain.pending_votes | length }}</h5>
+                                <p class="card-text small">Votos Pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-dark text-center">
+                            <div class="card-body">
+                                {% if blockchain.is_valid %}
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <h5 class="card-title text-success">Válida</h5>
+                                {% else %}
+                                    <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                                    <h5 class="card-title text-danger">Corrupta</h5>
+                                {% endif %}
+                                <p class="card-text small">Estado de la Blockchain</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blockchain Visualization -->
+                <div class="blockchain-container">
+                    {% for block in blockchain.chain %}
+                        <div class="card mb-3 border-{{ 'success' if loop.first else 'primary' }}">
+                            <div class="card-header bg-{{ 'success' if loop.first else 'primary' }} text-white">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title mb-0">
+                                            <i class="fas fa-cube me-2"></i>
+                                            {% if loop.first %}
+                                                Bloque Génesis #{{ block.index }}
+                                            {% else %}
+                                                Bloque #{{ block.index }}
+                                            {% endif %}
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <small>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ block.timestamp[:19] }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-fingerprint me-1"></i>
+                                            Hash del Bloque
+                                        </h6>
+                                        <code class="small">{{ block.hash }}</code>
+                                        
+                                        <h6 class="text-secondary mt-3">
+                                            <i class="fas fa-link me-1"></i>
+                                            Hash Anterior
+                                        </h6>
+                                        <code class="small">{{ block.previous_hash }}</code>
+                                        
+                                        <h6 class="text-info mt-3">
+                                            <i class="fas fa-mining me-1"></i>
+                                            Nonce
+                                        </h6>
+                                        <span class="badge bg-info">{{ block.nonce }}</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-success">
+                                            <i class="fas fa-vote-yea me-1"></i>
+                                            Votos en este Bloque ({{ block.votes | length }})
+                                        </h6>
+                                        
+                                        {% if block.votes %}
+                                            <div class="vote-list" style="max-height: 200px; overflow-y: auto;">
+                                                {% for vote in block.votes %}
+                                                    <div class="card border-0 bg-dark mb-2">
+                                                        <div class="card-body py-2">
+                                                            <div class="row align-items-center">
+                                                                <div class="col-md-6">
+                                                                    <strong class="text-warning">{{ vote.option }}</strong>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <small class="text-muted">
+                                                                        Elección: {{ vote.election_id }}<br>
+                                                                        ID: {{ vote.vote_id }}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted small">
+                                                {% if loop.first %}
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    Bloque génesis - Sin votos
+                                                {% else %}
+                                                    <i class="fas fa-inbox me-1"></i>
+                                                    Sin votos en este bloque
+                                                {% endif %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Block Connection Visualization -->
+                                {% if not loop.last %}
+                                    <div class="text-center mt-3">
+                                        <i class="fas fa-arrow-down fa-2x text-primary"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pending Votes -->
+                {% if blockchain.pending_votes %}
+                    <div class="card border-warning mt-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-clock me-2"></i>
+                                Votos Pendientes de Minado ({{ blockchain.pending_votes | length }})
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for vote in blockchain.pending_votes %}
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card border-0 bg-dark">
+                                            <div class="card-body py-2">
+                                                <strong class="text-warning">{{ vote.option }}</strong><br>
+                                                <small class="text-muted">
+                                                    Elección: {{ vote.election_id }}<br>
+                                                    ID: {{ vote.vote_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                                <i class="fas fa-home me-2"></i>
+                                Volver al Inicio
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <button class="btn btn-outline-info" onclick="refreshBlockchain()">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                Actualizar Blockchain
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshBlockchain() {
+    location.reload();
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshBlockchain, 30000);
+</script>
+{% endblock %}

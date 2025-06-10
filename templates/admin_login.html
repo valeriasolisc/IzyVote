@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Sistema de Votación Blockchain{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="card-title mb-0 text-center">
+                    <i class="fas fa-user-shield me-2"></i>
+                    Panel Administrativo
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>
+                            Correo Electrónico
+                        </label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="email" 
+                               name="email" 
+                               placeholder="admin@uni.pe"
+                               required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>
+                            Contraseña
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning text-dark">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Volver al Inicio
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Security Notice -->
+        <div class="card mt-4 border-0 bg-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt text-warning fa-2x mb-2"></i>
+                <h6>Acceso Restringido</h6>
+                <p class="small text-muted">
+                    Solo el administrador autorizado puede acceder a este panel.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
