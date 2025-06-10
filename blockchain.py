@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -49,7 +50,10 @@ class VotingBlockchain:
     def __init__(self):
         self.chain: List[Block] = []
         self.pending_votes: List[Dict] = []
-        self.create_genesis_block()
+        self.blockchain_file = "instance/blockchain.json"
+        self.load_blockchain()
+        if not self.chain:
+            self.create_genesis_block()
     
     def create_genesis_block(self):
         """Create the first block in the chain"""
@@ -84,6 +88,7 @@ class VotingBlockchain:
         block.mine_block()
         self.chain.append(block)
         self.pending_votes = []
+        self.save_blockchain()  # Auto-save after mining
     
     def get_votes_for_election(self, election_id: int) -> List[Dict]:
         """Get all votes for a specific election"""
@@ -116,6 +121,41 @@ class VotingBlockchain:
                 return False
         
         return True
+    
+    def save_blockchain(self):
+        """Save blockchain to file"""
+        try:
+            os.makedirs("instance", exist_ok=True)
+            with open(self.blockchain_file, 'w') as f:
+                json.dump({
+                    "chain": [block.to_dict() for block in self.chain],
+                    "pending_votes": self.pending_votes
+                }, f, indent=2)
+        except Exception as e:
+            print(f"Error saving blockchain: {e}")
+    
+    def load_blockchain(self):
+        """Load blockchain from file"""
+        try:
+            if os.path.exists(self.blockchain_file):
+                with open(self.blockchain_file, 'r') as f:
+                    data = json.load(f)
+                    
+                # Reconstruct blocks
+                for block_data in data.get("chain", []):
+                    block = Block(
+                        block_data["index"],
+                        block_data["votes"],
+                        block_data["previous_hash"]
+                    )
+                    block.timestamp = block_data["timestamp"]
+                    block.nonce = block_data["nonce"]
+                    block.hash = block_data["hash"]
+                    self.chain.append(block)
+                
+                self.pending_votes = data.get("pending_votes", [])
+        except Exception as e:
+            print(f"Error loading blockchain: {e}")
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert blockchain to dictionary for JSON serialization"""

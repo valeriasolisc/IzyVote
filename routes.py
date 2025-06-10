@@ -4,6 +4,7 @@ from models import Election, VerificationCode, VoterHistory
 from blockchain import voting_blockchain
 from email_service import email_service
 import hashlib
+import os
 from datetime import datetime, timedelta
 import json
 
@@ -149,7 +150,10 @@ def admin_login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
         
-        if email == 'valeria.solis.c@uni.pe' and password == 'PruebaDeSoftware':
+        admin_email = os.environ.get('ADMIN_EMAIL', 'valeria.solis.c@uni.pe')
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'PruebaDeSoftware')
+        
+        if email == admin_email and password == admin_password:
             session['admin_logged_in'] = True
             flash('Bienvenido al panel administrativo.', 'success')
             return redirect(url_for('admin_panel'))
