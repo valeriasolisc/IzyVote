@@ -1,0 +1,28 @@
+{
+  "chain": [
+    {
+      "index": 0,
+      "timestamp": "2025-06-11T00:48:04.685172",
+      "votes": [],
+      "previous_hash": "0",
+      "nonce": 97351,
+      "hash": "000025330c9d37095dee910c6787a4f06ae32d919e2b7482dd759a08400fa0c9"
+    },
+    {
+      "index": 1,
+      "timestamp": "2025-06-11T00:54:07.393518",
+      "votes": [
+        {
+          "election_id": 1,
+          "option": "Mar\u00eda Elena Rodr\u00edguez",
+          "timestamp": "2025-06-11T00:54:07.393494",
+          "vote_id": "9c850b6fdd747409"
+        }
+      ],
+      "previous_hash": "000025330c9d37095dee910c6787a4f06ae32d919e2b7482dd759a08400fa0c9",
+      "nonce": 1262,
+      "hash": "0000e6fc7e92744f6150745cf6f82cf1fc9e5d153eb4018bc56e3b3daca9f74d"
+    }
+  ],
+  "pending_votes": []
+}
