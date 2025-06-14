@@ -3,24 +3,25 @@ from datetime import datetime
 import json
 
 class Election(db.Model):
-    """Model for managing elections"""
+    """Administrar elecciones"""
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    options = db.Column(db.Text, nullable=False)  # JSON string of voting options
+    options = db.Column(db.Text, nullable=False)  # JSON string para opciones de votación
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def get_options(self):
-        """Get voting options as a list"""
+        """Convierte el JSON almacenado en una lista de Python"""
         return json.loads(self.options)
     
     def set_options(self, options_list):
-        """Set voting options from a list"""
+        """Convierte una lista Python a JSON para almacenar en la BD"""
+        """Cuando el admin crea una nueva elección, se convierte la lista de opciones en un JSON"""
         self.options = json.dumps(options_list)
 
 class VerificationCode(db.Model):
-    """Model for email verification codes"""
+    """Conecta códigos de verificación con elecciones específicas"""
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), nullable=False)
     code = db.Column(db.String(6), nullable=False)
@@ -31,7 +32,7 @@ class VerificationCode(db.Model):
     election = db.relationship('Election', backref='verification_codes')
 
 class VoterHistory(db.Model):
-    """Model to track if a voter has already voted (without storing the vote itself)"""
+    """Garantiza que un email solo vote UNA vez por elección"""
     id = db.Column(db.Integer, primary_key=True)
     email_hash = db.Column(db.String(64), nullable=False)  # Hashed email for privacy
     election_id = db.Column(db.Integer, db.ForeignKey('election.id'), nullable=False)

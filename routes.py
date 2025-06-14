@@ -10,24 +10,24 @@ import json
 
 @app.route('/')
 def index():
-    """Home page showing active elections"""
+    """Página principal con elecciones activas"""
     active_elections = Election.query.filter_by(is_active=True).all()
     return render_template('index.html', elections=active_elections)
 
 @app.route('/verify_email/<int:election_id>', methods=['GET', 'POST'])
 def verify_email(election_id):
-    """Email verification page"""
+    """Página de verificación de correo"""
     election = Election.query.get_or_404(election_id)
     
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         
-        # Validate UNI domain
+        # Valida dominio UNI
         if not email.endswith('@uni.pe'):
             flash('Solo se permiten correos del dominio @uni.pe', 'error')
             return render_template('verify_email.html', election=election)
         
-        # Check if user already voted
+        # Verifica que el usuario no haya votado ya
         email_hash = hashlib.sha256(email.encode()).hexdigest()
         existing_vote = VoterHistory.query.filter_by(
             email_hash=email_hash, 
@@ -38,10 +38,10 @@ def verify_email(election_id):
             flash('Ya has votado en esta elección.', 'error')
             return redirect(url_for('index'))
         
-        # Generate and send verification code
+        # Genera y envía código de verificación
         verification_code = email_service.generate_verification_code()
         
-        # Store verification code
+        # Verifica si ya existe un código para este correo y elección
         verification = VerificationCode(
             email=email,
             code=verification_code,
@@ -50,7 +50,7 @@ def verify_email(election_id):
         db.session.add(verification)
         db.session.commit()
         
-        # Send email
+        # Envía correo de verificación
         if email_service.send_verification_email(email, verification_code, election.title):
             session['verification_id'] = verification.id
             flash('Código de verificación enviado a tu correo.', 'success')
@@ -62,7 +62,7 @@ def verify_email(election_id):
 
 @app.route('/vote/<int:election_id>', methods=['GET', 'POST'])
 def vote(election_id):
-    """Voting page"""
+    """Página de votación"""
     election = Election.query.get_or_404(election_id)
     
     if not election.is_active:
@@ -78,7 +78,7 @@ def vote(election_id):
         flash('Código de verificación inválido.', 'error')
         return redirect(url_for('verify_email', election_id=election_id))
     
-    # Check if code is expired (30 minutes)
+    # Verifica que el código no haya expirado (30 minutos)
     if datetime.utcnow() - verification.created_at > timedelta(minutes=30):
         flash('Código de verificación expirado.', 'error')
         return redirect(url_for('verify_email', election_id=election_id))
@@ -95,27 +95,27 @@ def vote(election_id):
             flash('Opción de voto inválida.', 'error')
             return render_template('vote.html', election=election, options=election.get_options())
         
-        # Mark verification as used
+        # Marca el código como usado
         verification.used = True
         
-        # Create voter history (anonymous)
+        # Crea historial de voto
         email_hash = hashlib.sha256(verification.email.encode()).hexdigest()
         voter_history = VoterHistory(
             email_hash=email_hash,
             election_id=election_id
         )
         
-        # Add vote to blockchain
+        # Añade voto a la blockchain
         voting_blockchain.add_vote(election_id, selected_option)
         voting_blockchain.mine_pending_votes()
         
         db.session.add(voter_history)
         db.session.commit()
         
-        # Send confirmation email
+        # Envía correo de confirmación
         email_service.send_vote_confirmation(verification.email, election.title)
         
-        # Clear session
+        # Cierra sesión de verificación
         session.pop('verification_id', None)
         
         flash('¡Voto registrado exitosamente!', 'success')
@@ -125,11 +125,11 @@ def vote(election_id):
 
 @app.route('/results/<int:election_id>')
 def results(election_id):
-    """Results page with charts"""
+    """Pagina de resultados de votación"""
     election = Election.query.get_or_404(election_id)
     vote_count = voting_blockchain.get_vote_count(election_id)
     
-    # Ensure all options are represented
+    # Asegura que todas las opciones estén representadas
     options = election.get_options()
     for option in options:
         if option not in vote_count:
@@ -139,13 +139,13 @@ def results(election_id):
 
 @app.route('/blockchain')
 def blockchain_view():
-    """View blockchain data"""
+    """Mira la cadena de bloques"""
     blockchain_data = voting_blockchain.to_dict()
     return render_template('blockchain_view.html', blockchain=blockchain_data)
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    """Admin login page"""
+    """Pagina de login para el admin"""
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
@@ -164,7 +164,7 @@ def admin_login():
 
 @app.route('/admin/panel', methods=['GET', 'POST'])
 def admin_panel():
-    """Admin panel for managing elections"""
+    """Panel de administración"""
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     
@@ -213,7 +213,7 @@ def admin_logout():
 
 @app.route('/api/results/<int:election_id>')
 def api_results(election_id):
-    """API endpoint for real-time results"""
+    """API para obtener resultados de votación"""
     vote_count = voting_blockchain.get_vote_count(election_id)
     election = Election.query.get_or_404(election_id)
     
