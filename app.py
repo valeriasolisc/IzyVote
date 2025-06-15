@@ -5,10 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Carga variables de entorno desde .env
 load_dotenv()
 
-# Configure logging
+# Configura logging
 logging.basicConfig(level=logging.DEBUG)
 
 class Base(DeclarativeBase):
@@ -16,24 +16,24 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-# Create the app
+# Crea la app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "voting-blockchain-secret-key")
 
-# Configure the database
+# Configura la base de datos
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///instance/voting.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 
-# Initialize the app with the extension
+# Inicializa la base de datos
 db.init_app(app)
 
 with app.app_context():
-    # Import models to ensure tables are created
+    # Importa modelos para crear tablas
     import models
     db.create_all()
 
-# Import routes after app initialization
+# Importa rutas después de inicializar la app
 import routes

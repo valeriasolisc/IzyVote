@@ -22,6 +22,21 @@
       "previous_hash": "000025330c9d37095dee910c6787a4f06ae32d919e2b7482dd759a08400fa0c9",
       "nonce": 1262,
       "hash": "0000e6fc7e92744f6150745cf6f82cf1fc9e5d153eb4018bc56e3b3daca9f74d"
+    },
+    {
+      "index": 2,
+      "timestamp": "2025-06-14T19:15:47.010007",
+      "votes": [
+        {
+          "election_id": 2,
+          "option": "Eventos Culturales y Art\u00edsticos",
+          "timestamp": "2025-06-14T19:15:47.009910",
+          "vote_id": "d74c2c6bb1b4e159"
+        }
+      ],
+      "previous_hash": "0000e6fc7e92744f6150745cf6f82cf1fc9e5d153eb4018bc56e3b3daca9f74d",
+      "nonce": 34361,
+      "hash": "0000ce3d333a839b3e44854e2d4952ec7e14d4df0e400eb46be42b1df28f8667"
     }
   ],
   "pending_votes": []

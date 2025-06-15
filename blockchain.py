@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List, Dict, Any
 
 class Block:
-    """Individual block in the blockchain"""
+    """Bloque individual en la cadena de bloques"""
     
     def __init__(self, index: int, votes: List[Dict], previous_hash: str):
         self.index = index
@@ -16,7 +16,7 @@ class Block:
         self.hash = self.calculate_hash()
     
     def calculate_hash(self) -> str:
-        """Calculate hash for this block"""
+        """Calcula hash del bloque"""
         block_string = json.dumps({
             "index": self.index,
             "timestamp": self.timestamp,
@@ -27,14 +27,14 @@ class Block:
         return hashlib.sha256(block_string.encode()).hexdigest()
     
     def mine_block(self, difficulty: int = 4):
-        """Mine block with proof of work"""
+        """Mina el bloque hasta que cumpla con la dificultad"""
         target = "0" * difficulty
         while self.hash[:difficulty] != target:
             self.nonce += 1
             self.hash = self.calculate_hash()
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert block to dictionary for JSON serialization"""
+        """Convierte el bloque a un diccionario para serialización JSON"""
         return {
             "index": self.index,
             "timestamp": self.timestamp,
@@ -45,7 +45,7 @@ class Block:
         }
 
 class VotingBlockchain:
-    """Blockchain implementation for voting system"""
+    """Implementación de la cadena de bloques para el sistema de votación"""
     
     def __init__(self):
         self.chain: List[Block] = []
@@ -76,7 +76,7 @@ class VotingBlockchain:
         self.pending_votes.append(vote)
     
     def mine_pending_votes(self):
-        """Mine all pending votes into a new block"""
+        """Mina todos los votos pendientes en un nuevo bloque"""
         if not self.pending_votes:
             return
         
@@ -91,7 +91,7 @@ class VotingBlockchain:
         self.save_blockchain()  # Auto-save after mining
     
     def get_votes_for_election(self, election_id: int) -> List[Dict]:
-        """Get all votes for a specific election"""
+        """Obtiene todos los votos para una elección específica"""
         votes = []
         for block in self.chain:
             for vote in block.votes:
@@ -100,7 +100,7 @@ class VotingBlockchain:
         return votes
     
     def get_vote_count(self, election_id: int) -> Dict[str, int]:
-        """Get vote count for each option in an election"""
+        """Obtiene el conteo de votos para una elección específica"""
         votes = self.get_votes_for_election(election_id)
         vote_count = {}
         for vote in votes:
@@ -109,7 +109,7 @@ class VotingBlockchain:
         return vote_count
     
     def is_chain_valid(self) -> bool:
-        """Validate the entire blockchain"""
+        """Valida la cadena de bloques"""
         for i in range(1, len(self.chain)):
             current_block = self.chain[i]
             previous_block = self.chain[i - 1]
@@ -123,7 +123,7 @@ class VotingBlockchain:
         return True
     
     def save_blockchain(self):
-        """Save blockchain to file"""
+        """Guarda la cadena de bloques en un archivo"""
         try:
             os.makedirs("instance", exist_ok=True)
             with open(self.blockchain_file, 'w') as f:
@@ -135,7 +135,7 @@ class VotingBlockchain:
             print(f"Error saving blockchain: {e}")
     
     def load_blockchain(self):
-        """Load blockchain from file"""
+        """Carga la cadena de bloques desde un archivo"""
         try:
             if os.path.exists(self.blockchain_file):
                 with open(self.blockchain_file, 'r') as f:
@@ -158,12 +158,12 @@ class VotingBlockchain:
             print(f"Error loading blockchain: {e}")
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert blockchain to dictionary for JSON serialization"""
+        """Convierte la cadena de bloques a un diccionario para serialización JSON"""
         return {
             "chain": [block.to_dict() for block in self.chain],
             "pending_votes": self.pending_votes,
             "is_valid": self.is_chain_valid()
         }
 
-# Global blockchain instance
+# Instancia global de la cadena de bloques
 voting_blockchain = VotingBlockchain()

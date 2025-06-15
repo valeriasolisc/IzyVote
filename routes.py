@@ -213,11 +213,11 @@ def admin_logout():
 
 @app.route('/api/results/<int:election_id>')
 def api_results(election_id):
-    """API para obtener resultados de votación"""
+    """API devuelve los resultados de votación en formato JSON."""
     vote_count = voting_blockchain.get_vote_count(election_id)
     election = Election.query.get_or_404(election_id)
     
-    # Ensure all options are represented
+    # Asegura que todas las opciones estén representadas
     options = election.get_options()
     for option in options:
         if option not in vote_count:

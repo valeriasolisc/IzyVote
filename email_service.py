@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import logging
 
 class EmailService:
-    """Service for sending verification and notification emails"""
+    """Servicio de correo electrónico para enviar códigos de verificación y confirmaciones de voto"""
     
     def __init__(self):
         self.smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
@@ -16,11 +16,11 @@ class EmailService:
         self.email_password = os.environ.get("EMAIL_PASSWORD")
     
     def generate_verification_code(self) -> str:
-        """Generate a 6-digit verification code"""
+        """Genera un código de verificación aleatorio de 6 dígitos"""
         return ''.join(random.choices(string.digits, k=6))
     
     def send_verification_email(self, to_email: str, verification_code: str, election_title: str) -> bool:
-        """Send verification code email"""
+        """Envia un correo de verificación"""
         try:
             msg = MIMEMultipart()
             msg['From'] = self.email_username
@@ -44,7 +44,7 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            # Send real email if credentials are provided
+            # Envia correo real si las credenciales están proporcionadas
             if self.email_password:
                 server = smtplib.SMTP(self.smtp_server, self.smtp_port)
                 server.starttls()
@@ -54,7 +54,7 @@ class EmailService:
                 server.quit()
                 logging.info(f"Verification email sent to {to_email}")
             else:
-                # For development, just log the email content
+                # Para desarrollo, solo registra el contenido del correo
                 logging.info(f"Development mode - Verification email to {to_email}: Code {verification_code}")
                 print(f"VERIFICATION EMAIL - To: {to_email}, Code: {verification_code}")
             
@@ -94,7 +94,7 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
-            # Send real email if credentials are provided
+            # Envia correo real si las credenciales están proporcionadas
             if self.email_password:
                 server = smtplib.SMTP(self.smtp_server, self.smtp_port)
                 server.starttls()
@@ -104,7 +104,7 @@ class EmailService:
                 server.quit()
                 logging.info(f"Vote confirmation sent to {to_email}")
             else:
-                # For development, just log the email content
+                # Para desarrollo, solo registra el contenido del correo
                 logging.info(f"Development mode - Vote confirmation to {to_email}")
                 print(f"VOTE CONFIRMATION EMAIL - To: {to_email}")
             
@@ -114,5 +114,5 @@ class EmailService:
             logging.error(f"Error sending vote confirmation: {str(e)}")
             return False
 
-# Global email service instance
+# Servicio global de correo electrónico
 email_service = EmailService()
