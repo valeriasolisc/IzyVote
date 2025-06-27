@@ -146,14 +146,11 @@ run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
 
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
 ## 📞 Contacto
 
-- **Desarrollador**: Tu Nombre
-- **Email**: tu-email@uni.pe
+- **Desarrollador**: Valeria Solís Córdova
+- **Email**: valeria.solis.c@uni.pe
 - **Universidad**: Universidad Nacional de Ingeniería
 
 ## 🎯 Roadmap
