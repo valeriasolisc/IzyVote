@@ -28,7 +28,7 @@ function initializeVotingApp() {
 
 // Email validation function
 function validateUniversityEmail(email) {
-    const uniPattern = /^[a-zA-Z0-9._%+-]+@uni\.pe$/;
+    const uniPattern = /^[a-zA-Z0-9._%+-]+@uni\.(pe|edu\.pe)$/;
     return uniPattern.test(email);
 }
 

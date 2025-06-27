@@ -22,9 +22,9 @@ def verify_email(election_id):
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         
-        # Valida dominio UNI
-        if not email.endswith('@uni.pe'):
-            flash('Solo se permiten correos del dominio @uni.pe', 'error')
+        # Valida dominios UNI
+        if not (email.endswith('@uni.pe') or email.endswith('@uni.edu.pe')):
+            flash('Solo se permiten correos de los dominios @uni.pe o @uni.edu.pe', 'error')
             return render_template('verify_email.html', election=election)
         
         # Verifica que el usuario no haya votado ya

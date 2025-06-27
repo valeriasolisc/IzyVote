@@ -2,7 +2,7 @@
 
 ## Overview
 
-IzyVote is a secure, anonymous blockchain-based voting system built with Flask. The application enables transparent elections where votes are cryptographically secured and stored in a blockchain, ensuring immutability and verifiability while maintaining voter anonymity. The system is specifically designed for university environments, requiring @uni.pe email addresses for authentication.
+IzyVote is a secure, anonymous blockchain-based voting system built with Flask. The application enables transparent elections where votes are cryptographically secured and stored in a blockchain, ensuring immutability and verifiability while maintaining voter anonymity. The system is specifically designed for university environments, requiring @uni.pe or @uni.edu.pe email addresses for authentication.
 
 ## System Architecture
 
@@ -45,7 +45,7 @@ The application follows a traditional web application architecture with blockcha
 ## Data Flow
 
 1. **Election Creation**: Admin creates election with title, description, and options
-2. **Voter Verification**: User enters @uni.pe email, system sends 6-digit verification code
+2. **Voter Verification**: User enters @uni.pe or @uni.edu.pe email, system sends 6-digit verification code
 3. **Vote Submission**: User enters code and selects option, system validates and processes
 4. **Blockchain Recording**: Valid votes are added to pending votes, then mined into blocks
 5. **Result Display**: Real-time results calculated from blockchain data with charts
@@ -90,6 +90,8 @@ The deployment uses a two-stage approach:
 
 ## Changelog
 
+- June 27, 2025. Added support for @uni.edu.pe email domain in addition to @uni.pe
+- June 21, 2025. Reset voting processes and blockchain system
 - June 21, 2025. Initial setup
 
 ## User Preferences
