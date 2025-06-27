@@ -50,11 +50,11 @@ pip install -r requirements.txt
 3. **Configura las variables de entorno**
 Crea un archivo `.env` con:
 ```env
-SESSION_SECRET=tu-clave-secreta-aqui
-EMAIL_USERNAME=tu-email@gmail.com
-EMAIL_PASSWORD=tu-password-de-aplicacion
+SESSION_SECRET=mi-clave-secreta-aqui
+EMAIL_USERNAME=mi-email@gmail.com
+EMAIL_PASSWORD=mi-password-de-aplicacion
 ADMIN_EMAIL=admin@uni.pe
-ADMIN_PASSWORD=tu-password-admin
+ADMIN_PASSWORD=mi-password-admin
 ```
 
 4. **Ejecuta la aplicación**
