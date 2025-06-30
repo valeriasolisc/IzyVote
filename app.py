@@ -42,6 +42,50 @@ def initialize_app():
         from blockchain import voting_blockchain
         from email_service import email_service
         
+        # Agregar filtro personalizado para fechas en zona horaria de Perú
+        from datetime import datetime, timezone, timedelta
+        
+        @app.template_filter('peru_datetime')
+        def peru_datetime_filter(dt_string):
+            """Convierte timestamp ISO a formato legible en zona horaria de Perú"""
+            try:
+                # Si es string ISO, convertir a datetime
+                if isinstance(dt_string, str):
+                    # Parsear timestamp ISO
+                    if dt_string.endswith('Z'):
+                        dt = datetime.fromisoformat(dt_string[:-1] + '+00:00')
+                    elif '+' in dt_string or dt_string.count('-') > 2:
+                        dt = datetime.fromisoformat(dt_string)
+                    else:
+                        dt = datetime.fromisoformat(dt_string)
+                        # Asumir UTC si no hay timezone
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                else:
+                    dt = dt_string
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                
+                # Convertir a zona horaria de Perú
+                peru_tz = timezone(timedelta(hours=-5))
+                dt_peru = dt.astimezone(peru_tz)
+                
+                # Formatear en español
+                months = [
+                    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+                ]
+                
+                day = dt_peru.day
+                month = months[dt_peru.month - 1]
+                year = dt_peru.year
+                time = dt_peru.strftime('%H:%M:%S')
+                
+                return f"{day} de {month} de {year} a las {time} (Perú)"
+                
+            except Exception as e:
+                return str(dt_string)  # Fallback al string original
+        
         logging.info("Aplicación inicializada correctamente")
         return True
         

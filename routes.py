@@ -5,8 +5,11 @@ from blockchain import voting_blockchain
 from email_service import email_service
 import hashlib
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
+
+# Zona horaria de Perú (UTC-5)
+PERU_TZ = timezone(timedelta(hours=-5))
 
 @app.route('/')
 def index():
@@ -79,7 +82,8 @@ def vote(election_id):
         return redirect(url_for('verify_email', election_id=election_id))
     
     # Verifica que el código no haya expirado (30 minutos)
-    if datetime.utcnow() - verification.created_at > timedelta(minutes=30):
+    now_peru = datetime.now(PERU_TZ).replace(tzinfo=None)
+    if now_peru - verification.created_at > timedelta(minutes=30):
         flash('Código de verificación expirado.', 'error')
         return redirect(url_for('verify_email', election_id=election_id))
     

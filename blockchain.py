@@ -1,15 +1,18 @@
 import hashlib
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any
+
+# Zona horaria de Perú (UTC-5)
+PERU_TZ = timezone(timedelta(hours=-5))
 
 class Block:
     """Bloque individual en la cadena de bloques"""
     
     def __init__(self, index: int, votes: List[Dict], previous_hash: str):
         self.index = index
-        self.timestamp = datetime.utcnow().isoformat()
+        self.timestamp = datetime.now(PERU_TZ).isoformat()
         self.votes = votes  # List of anonymous votes
         self.previous_hash = previous_hash
         self.nonce = 0
@@ -67,11 +70,12 @@ class VotingBlockchain:
     
     def add_vote(self, election_id: int, option: str):
         """Add a vote to pending votes"""
+        now_peru = datetime.now(PERU_TZ)
         vote = {
             "election_id": election_id,
             "option": option,
-            "timestamp": datetime.utcnow().isoformat(),
-            "vote_id": hashlib.sha256(f"{election_id}{option}{datetime.utcnow()}".encode()).hexdigest()[:16]
+            "timestamp": now_peru.isoformat(),
+            "vote_id": hashlib.sha256(f"{election_id}{option}{now_peru}".encode()).hexdigest()[:16]
         }
         self.pending_votes.append(vote)
     

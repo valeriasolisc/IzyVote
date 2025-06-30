@@ -96,13 +96,13 @@
                                             Hash del Bloque
                                         </h6>
                                         <code class="small">{{ block.hash }}</code>
-                                        
+
                                         <h6 class="text-secondary mt-3">
                                             <i class="fas fa-link me-1"></i>
                                             Hash Anterior
                                         </h6>
                                         <code class="small">{{ block.previous_hash }}</code>
-                                        
+
                                         <h6 class="text-info mt-3">
                                             <i class="fas fa-mining me-1"></i>
                                             Nonce
@@ -114,7 +114,7 @@
                                             <i class="fas fa-vote-yea me-1"></i>
                                             Votos en este Bloque ({{ block.votes | length }})
                                         </h6>
-                                        
+
                                         {% if block.votes %}
                                             <div class="vote-list" style="max-height: 200px; overflow-y: auto;">
                                                 {% for vote in block.votes %}
@@ -148,7 +148,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <!-- Block Connection Visualization -->
                                 {% if not loop.last %}
                                     <div class="text-center mt-3">
