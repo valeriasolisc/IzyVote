@@ -25,8 +25,9 @@ def verify_email(election_id):
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         
-        # Valida dominios UNI
-        if not (email.endswith('@uni.pe') or email.endswith('@uni.edu.pe')):
+        # Valida dominios universitarios
+        allowed_domains = ['@uni.pe', '@uni.edu.pe', '@unmsm.edu.pe']
+        if not any(email.endswith(domain) for domain in allowed_domains):
             flash('Solo se permiten correos de los dominios @uni.pe o @uni.edu.pe', 'error')
             return render_template('verify_email.html', election=election)
         
