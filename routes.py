@@ -205,6 +205,23 @@ def admin_panel():
                 db.session.commit()
                 status = 'activada' if election.is_active else 'desactivada'
                 flash(f'Elección {status} exitosamente.', 'success')
+        
+        elif action == 'delete_election':
+            election_id = request.form.get('election_id')
+            election = Election.query.get(election_id)
+            if election:
+                # Eliminar códigos de verificación asociados
+                VerificationCode.query.filter_by(election_id=election_id).delete()
+                # Eliminar historial de votantes
+                VoterHistory.query.filter_by(election_id=election_id).delete()
+                # Eliminar la elección
+                db.session.delete(election)
+                db.session.commit()
+                
+                # Eliminar votos de la blockchain
+                voting_blockchain.remove_votes_for_election(int(election_id))
+                
+                flash(f'Elección "{election.title}" eliminada exitosamente.', 'success')
     
     elections = Election.query.order_by(Election.created_at.desc()).all()
     return render_template('admin_panel.html', elections=elections, voting_blockchain=voting_blockchain)

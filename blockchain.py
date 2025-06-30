@@ -161,6 +161,35 @@ class VotingBlockchain:
         except Exception as e:
             print(f"Error loading blockchain: {e}")
     
+    def remove_votes_for_election(self, election_id: int):
+        """Elimina todos los votos para una elección específica de la blockchain"""
+        # Filtrar votos pendientes
+        self.pending_votes = [vote for vote in self.pending_votes if vote["election_id"] != election_id]
+        
+        # Crear nueva cadena sin los votos de la elección eliminada
+        new_chain = []
+        
+        for block in self.chain:
+            if block.index == 0:  # Genesis block
+                new_chain.append(block)
+                continue
+            
+            # Filtrar votos del bloque
+            filtered_votes = [vote for vote in block.votes if vote["election_id"] != election_id]
+            
+            # Solo agregar bloques que tengan votos después del filtrado
+            if filtered_votes:
+                new_block = Block(
+                    len(new_chain),
+                    filtered_votes,
+                    new_chain[-1].hash if new_chain else "0"
+                )
+                new_block.mine_block()
+                new_chain.append(new_block)
+        
+        self.chain = new_chain
+        self.save_blockchain()
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convierte la cadena de bloques a un diccionario para serialización JSON"""
         return {
